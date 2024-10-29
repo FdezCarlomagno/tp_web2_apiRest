@@ -13,16 +13,60 @@ class Guitar_model {
 
     
     public function getGuitarras($filtrar = null, $orden = false)
-    {
-        $sql = "SELECT * FROM guitarra";
+    {   
+        $sql = "SELECT * FROM guitarra ";
+        $queryParams = $this->getQuery($filtrar, $orden);
+        $sql .= $queryParams;
 
 
-        $query = $this->db->prepare("SELECT * FROM guitarra");
+        $query = $this->db->prepare($sql);
         $query->execute();
 
         $guitars = $query->fetchAll(PDO::FETCH_OBJ);
 
         return $guitars;
+    }
+    private function getQuery($filtrar, $orden){
+        $sql = "";
+
+        if($orden){
+            switch($orden){
+                case "price":
+                    $sql .= " ORDER BY precio";
+                break;
+                case "name":
+                    $sql .= " ORDER BY nombre";
+                    break;
+            }
+        }
+
+        if($filtrar){
+            switch($filtrar){
+                case "asc":
+                    $sql .= " ASC";
+                break;
+                case "desc":
+                    $sql .= " DESC";
+                break;
+            }
+        }
+        return $sql;
+    }
+
+    public function getGuitarrasByCategoria($id_categoria, $filtrar, $orderBy)
+    {   
+        
+        $base = "SELECT * FROM guitarra ";
+        $queryParams = $this->getQuery($filtrar, $orderBy);
+        $base .= " WHERE categoria_id = ?";
+        $sql = $base . $queryParams;
+       
+        $query = $this->db->prepare($sql);
+        $query->execute([$id_categoria]);
+
+        $filteredGuitars = $query->fetchAll(PDO::FETCH_OBJ);
+
+        return $filteredGuitars;
     }
 
     public function getGuitarraByID($id)
@@ -35,15 +79,7 @@ class Guitar_model {
         return $guitar;
     }
 
-    public function getGuitarrasByCategoria($id_categoria)
-    {
-        $query = $this->db->prepare("SELECT * FROM guitarra WHERE categoria_id = ?");
-        $query->execute([$id_categoria]);
 
-        $filteredGuitars = $query->fetchAll(PDO::FETCH_OBJ);
-
-        return $filteredGuitars;
-    }
 
     public function addGuitarra($nombre, $categoria_id, $precio, $imagen_url)
     {
@@ -57,6 +93,11 @@ class Guitar_model {
     {
         $query = $this->db->prepare("DELETE FROM guitarra WHERE id_guitarra = ?");
         $query->execute([$id]);
+    }
+
+    public function updateGuitarra($id, $nombre, $precio, $categoria_id, $imagen){
+        $query = $this->db->prepare("UPDATE guitarra SET nombre = ?, precio = ?, categoria_id = ?, imagen_url = ? WHERE id_guitarra = ?");
+        $query->execute([$nombre, $precio, $categoria_id, $imagen, $id]);
     }
 
     public function addCategoria($nombre)
@@ -89,7 +130,7 @@ class Guitar_model {
         $query->execute([$categoria_id, $id_guitarra]);
     }
 
-    public function deleteCategoria($categoria_id)
+    public function deleteCategoria($categoria_id, $filtrar, $orden)
     {
         //Que pasa si elimino una categoria y hay guitarras que pertenecen a esa categoria???
         //habria que hacer una categoria "sin categoria" y setear esa guitarra en esa categoria
@@ -105,8 +146,7 @@ class Guitar_model {
         if ($categoria_id == $id_sin_categoria) {
             throw new Exception("No se puede eliminar la categoría 'sin categoría'.");
         }
-
-        $guitars = $this->getGuitarrasByCategoria($categoria_id);
+        $guitars = $this->getGuitarrasByCategoria($categoria_id, $filtrar, $orden);
 
         foreach ($guitars as $guitar) {
             //llamamos a un metodo que hace update a la categoria y le pasamos que actualice la categoria de la guitarra a "sin categoria";
@@ -161,7 +201,7 @@ class Guitar_model {
 
 
     }
-    public function orderGuitarras($orden){
+    /*public function orderGuitarras($orden){
         $sql = "SELECT * FROM guitarra ";
         
         switch ($orden) {
@@ -177,5 +217,5 @@ class Guitar_model {
         $query->execute();
 
         return $query->fetchAll(PDO::FETCH_OBJ);
-    }
+    }*/
 }

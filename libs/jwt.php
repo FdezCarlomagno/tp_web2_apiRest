@@ -2,7 +2,7 @@
 
     function createJWT($payload) {
         // Header
-        $header = json_encode(['typ' => 'JWT', 'alg' => 'HS256']);
+        $header = json_encode(['alg' => 'HS256','typ' => 'JWT']);
         // Payload
         $payload = json_encode($payload);
 

@@ -15,15 +15,9 @@ class Controller {
     }
 
     public function getGuitarras($req, $res){
-        $filtrar= null;
-        if(isset($req->query->filtrar)){
-            $filtrar = $req->query->filtrar;
-        }
-        $orderBy = false;
-        if(isset($req->query->orderBy)){
-            $orderBy = $req->query->orderBy;
-        }
-        
+        $filtrar= $this->getFiltro($req);
+        $orderBy = $this->getOrder($req);
+    
         $guitarras = $this->model->getGuitarras($filtrar, $orderBy);
 
         if(count($guitarras) == 0){
@@ -33,8 +27,26 @@ class Controller {
         return $this->view->response($guitarras, 200);
     }
 
+    public function getFiltro($req){
+        $filtrar = null;
+        if(isset($req->query->filtrar)){
+            $filtrar = $req->query->filtrar;
+        }
+        return $filtrar;
+    }
+
+    public function getOrder($req){
+        $orderBy = false;
+        if(isset($req->query->orderBy)){
+            $orderBy = $req->query->orderBy;
+        }
+        return $orderBy;
+    }
+
     public function getGuitarrasByCategoria($req, $res){
         $nombre_categoria = $req->params->categoria;
+        $filtrar= $this->getFiltro($req);
+        $orderBy = $this->getOrder($req);
 
         $categoria = $this->model->getCategoriaByNombre($nombre_categoria);
 
@@ -42,7 +54,7 @@ class Controller {
             return $this->view->response("Error al buscar por categoria", 500);
         }
 
-        $guitarras = $this->model->getGuitarrasByCategoria($categoria->id_categoria);
+        $guitarras = $this->model->getGuitarrasByCategoria($categoria->id_categoria, $filtrar, $orderBy);
 
         if(count($guitarras) == 0){
             return $this->view->response("no hay guitarras con la categoria= $nombre_categoria", 200);
@@ -62,8 +74,6 @@ class Controller {
 
         return $this->view->response($guitarra, 200);
     }
-
-
 
     public function addGuitarra($req, $res){
 
@@ -112,6 +122,48 @@ class Controller {
         }
 
         return $this->view->response("la guitarra con el id=$id fue eliminada con exito", 200);
+    }
+
+    public function getCategorias($req, $res){
+        $categorias = $this->model->getCategorias();
+
+        if(!$categorias){
+            return $this->view->response("error al mostrar las categorias", 404);
+        }
+
+        return $this->view->response($categorias, 200);
+    }
+
+    public function updateGuitarra($req, $res){
+        if(!$res->user){
+            return $this->view->response("no autorizado", 401);
+        }
+
+        $id = $req->params->id;
+
+        $guitarra = $this->model->getGuitarraByID($id);
+
+        if(!$guitarra){
+            return $this->view->response("la guitarra con el id=$id no existe", 404);
+        }
+
+        $body = $req->body;
+
+        if(!isset($body->nombre, $body->precio, $body->imagen_url, $body->categoria_id)){
+            return $this->view->response("faltan datos obligatorios", 400);
+        }
+
+        $nombre =$body->nombre;
+        $precio = $body->precio;
+        $imagen = $body->imagen_url;
+        $categoria_id =  $body->categoria_id;
+
+        try {
+            $this->model->updateGuitarra($id, $nombre, $precio, $categoria_id, $imagen);
+            return $this->view->response("guitarra actualizada con exito", 200);
+        } catch (Exception  $e){
+            return $this->view->response("No se pudo crear la guitarra $e", 404);
+        }
     }
     
 }
