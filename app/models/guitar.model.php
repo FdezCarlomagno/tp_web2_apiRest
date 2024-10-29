@@ -1,19 +1,22 @@
 <?php
 
-class Guitar_model {
+class Guitar_model
+{
     private $db;
 
-    public function __construct(){
+    public function __construct()
+    {
         $this->db = $this->connect();
     }
 
-    private function connect(){
+    private function connect()
+    {
         return new PDO('mysql:host=localhost;dbname=centro_guitarras;charset=utf8', 'root', '');
     }
 
-    
+
     public function getGuitarras($filtrar = null, $orden = false)
-    {   
+    {
         $sql = "SELECT * FROM guitarra ";
         $queryParams = $this->getQuery($filtrar, $orden);
         $sql .= $queryParams;
@@ -26,41 +29,57 @@ class Guitar_model {
 
         return $guitars;
     }
-    private function getQuery($filtrar, $orden){
+    private function getQuery($filtrar, $orden)
+    {
         $sql = "";
 
-        if($orden){
-            switch($orden){
+        if ($orden) {
+            switch ($orden) {
+
+                case "asc":
+                    $sql .= " ASC";
+                    break;
+                case "desc":
+                    $sql .= " DESC";
+                    break;
                 case "price":
                     $sql .= " ORDER BY precio";
-                break;
+                    break;
                 case "name":
                     $sql .= " ORDER BY nombre";
+                    break;
+                case "id":
+                    $sql .= " ORDER BY id_guitarra";
                     break;
             }
         }
 
-        if($filtrar){
-            switch($filtrar){
-                case "asc":
-                    $sql .= " ASC";
-                break;
-                case "desc":
-                    $sql .= " DESC";
-                break;
+        if ($filtrar) {
+            switch ($filtrar) {
+
+                case "electrica":
+                    $sql .= " WHERE categoria_id=1 ";
+                    break;
+                case "electricoacustica":
+                    $sql .= " WHERE categoria_id=3 ";
+                    break;
+                case "acustica":
+                    $sql .= " WHERE categoria_id=2 ";
+                    break;
+               
             }
         }
         return $sql;
     }
 
     public function getGuitarrasByCategoria($id_categoria, $filtrar, $orderBy)
-    {   
-        
+    {
+
         $base = "SELECT * FROM guitarra ";
         $queryParams = $this->getQuery($filtrar, $orderBy);
         $base .= " WHERE categoria_id = ?";
         $sql = $base . $queryParams;
-       
+
         $query = $this->db->prepare($sql);
         $query->execute([$id_categoria]);
 
@@ -95,7 +114,8 @@ class Guitar_model {
         $query->execute([$id]);
     }
 
-    public function updateGuitarra($id, $nombre, $precio, $categoria_id, $imagen){
+    public function updateGuitarra($id, $nombre, $precio, $categoria_id, $imagen)
+    {
         $query = $this->db->prepare("UPDATE guitarra SET nombre = ?, precio = ?, categoria_id = ?, imagen_url = ? WHERE id_guitarra = ?");
         $query->execute([$nombre, $precio, $categoria_id, $imagen, $id]);
     }
@@ -181,25 +201,18 @@ class Guitar_model {
     {
         $query = $this->db->prepare("UPDATE guitarra SET imagen_url = ? WHERE id_guitarra = ?");
         $query->execute([$imagen_url, $id]);
-
     }
 
     public function cambiarNombre($id, $nombre)
     {
         $query = $this->db->prepare("UPDATE guitarra SET nombre = ? WHERE id_guitarra = ?");
         $query->execute([$nombre, $id]);
-
-
-
     }
     public function updatePrecio($id, $precio)
     {
-        echo "el nuevo precio es".$precio;
+        echo "el nuevo precio es" . $precio;
         $query = $this->db->prepare("UPDATE guitarra SET precio = ? WHERE id_guitarra = ?");
         $query->execute([$precio, $id]);
-
-
-
     }
     /*public function orderGuitarras($orden){
         $sql = "SELECT * FROM guitarra ";
