@@ -4,6 +4,7 @@ class Guitar_model
 {
     private $db;
 
+    private $view;
     public function __construct()
     {
         $this->db = $this->connect();
@@ -18,7 +19,7 @@ class Guitar_model
     public function getGuitarras($filtrar = null, $orden = false)
     {
         $sql = "SELECT * FROM guitarra ";
-        $queryParams = $this->getQuery($filtrar, $orden);
+        $queryParams = $this->getQueryParams($filtrar, $orden);
         $sql .= $queryParams;
 
 
@@ -29,9 +30,30 @@ class Guitar_model
 
         return $guitars;
     }
-    private function getQuery($filtrar, $orden)
+    private function getQueryParams($filtrar, $orden)
     {
         $sql = "";
+
+        $categorias = $this->getCategorias();
+
+        if ($filtrar) {
+
+            //el query filtrar tiene que tener la primera letra en mayuscula
+            //sino la db no reconoce la categoria.
+            $filtrar = ucfirst($filtrar); //convierto la primera letra a mayuscula.
+            $filtrar_categoria = null;
+
+            foreach ($categorias as $categoria) {
+                if($categoria->nombre == $filtrar){
+                    $filtrar_categoria = $categoria->id_categoria;
+                    break;
+                }
+            }
+        
+            if($filtrar_categoria != null){
+                $sql .= " WHERE categoria_id =" . $filtrar_categoria;
+            }
+        }
 
         if ($orden) {
             switch ($orden) {
@@ -53,22 +75,7 @@ class Guitar_model
                     break;
             }
         }
-
-        if ($filtrar) {
-            switch ($filtrar) {
-
-                case "electrica":
-                    $sql .= " WHERE categoria_id=1 ";
-                    break;
-                case "electricoacustica":
-                    $sql .= " WHERE categoria_id=3 ";
-                    break;
-                case "acustica":
-                    $sql .= " WHERE categoria_id=2 ";
-                    break;
-               
-            }
-        }
+        
         return $sql;
     }
 
@@ -76,7 +83,7 @@ class Guitar_model
     {
 
         $base = "SELECT * FROM guitarra ";
-        $queryParams = $this->getQuery($filtrar, $orderBy);
+        $queryParams = $this->getQueryParams($filtrar, $orderBy);
         $base .= " WHERE categoria_id = ?";
         $sql = $base . $queryParams;
 
@@ -97,8 +104,6 @@ class Guitar_model
 
         return $guitar;
     }
-
-
 
     public function addGuitarra($nombre, $categoria_id, $precio, $imagen_url)
     {
@@ -210,25 +215,7 @@ class Guitar_model
     }
     public function updatePrecio($id, $precio)
     {
-        echo "el nuevo precio es" . $precio;
         $query = $this->db->prepare("UPDATE guitarra SET precio = ? WHERE id_guitarra = ?");
         $query->execute([$precio, $id]);
     }
-    /*public function orderGuitarras($orden){
-        $sql = "SELECT * FROM guitarra ";
-        
-        switch ($orden) {
-            case "ordenPrecio":
-                $sql .= " ORDER BY precio ASC";
-                break;
-            case "ordenNombre":
-                $sql .= " ORDER BY nombre ASC";
-                break;
-        }
-
-        $query = $this->db->prepare($sql);
-        $query->execute();
-
-        return $query->fetchAll(PDO::FETCH_OBJ);
-    }*/
 }
