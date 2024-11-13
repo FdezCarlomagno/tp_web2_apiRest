@@ -1,5 +1,6 @@
 <?php
 
+require_once 'config.php';
 class Guitar_model
 {
     private $db;
@@ -12,14 +13,14 @@ class Guitar_model
 
     private function connect()
     {
-        return new PDO('mysql:host=localhost;dbname=centro_guitarras;charset=utf8', 'root', '');
+        return new PDO('mysql:host='.MYSQL_HOST .';dbname='.MYSQL_DB.';charset=utf8', MYSQL_USER, MYSQL_PASS);
     }
 
 
-    public function getGuitarras($filtrar = null, $orden = false)
+    public function getGuitarras($filtrar = null, $orden = false, $page = 1, $limit = 10)
     {
         $sql = "SELECT * FROM guitarra ";
-        $queryParams = $this->getQueryParams($filtrar, $orden);
+        $queryParams = $this->getQueryParams($filtrar, $orden, $page, $limit);
         $sql .= $queryParams;
 
 
@@ -30,54 +31,47 @@ class Guitar_model
 
         return $guitars;
     }
-    private function getQueryParams($filtrar, $orden)
+    private function getQueryParams($filtrar, $orden, $page = 1, $limit = 10)
+    {
+        $sql = $this->getFilterClause($filtrar);
+        $sql .= $this->getOrderClause($orden);
+        $offset = ($page - 1) * $limit;
+        $sql .= " LIMIT $limit OFFSET $offset";
+        return $sql;
+    }
+
+    private function getOrderClause($orden)
+    {
+        $sql = "";
+        if ($orden) {
+            $columns = ['precio', 'nombre', 'id'];
+            if (in_array($orden, $columns)) {
+                $sql .= " ORDER BY " . $orden;
+            }
+        }
+        return $sql;
+    }
+
+    private function getFilterClause($filtrar)
     {
         $sql = "";
 
-        $categorias = $this->getCategorias();
+        // Verifica si ya hay una condición WHERE y añade 'AND' en lugar de 'WHERE'
+        if ($filtrar == 'en-oferta') {
+            $sql .= (strpos($sql, "WHERE") === false ? " WHERE " : " AND ") . "en_oferta = 1";
+        }
 
         if ($filtrar) {
-
-            //el query filtrar tiene que tener la primera letra en mayuscula
-            //sino la db no reconoce la categoria.
-            $filtrar = ucfirst($filtrar); //convierto la primera letra a mayuscula.
-            $filtrar_categoria = null;
-
-            foreach ($categorias as $categoria) {
-                if($categoria->nombre == $filtrar){
-                    $filtrar_categoria = $categoria->id_categoria;
-                    break;
-                }
-            }
-        
-            if($filtrar_categoria != null){
-                $sql .= " WHERE categoria_id =" . $filtrar_categoria;
+            $filtrar = ucfirst($filtrar); // Convertir la primera letra en mayúscula
+            $categoria = $this->getCategoriaByNombre($filtrar);
+            if ($categoria) {
+                $sql .= " WHERE categoria_id = " . $categoria->id_categoria;
             }
         }
 
-        if ($orden) {
-            switch ($orden) {
-
-                case "asc":
-                    $sql .= " ASC";
-                    break;
-                case "desc":
-                    $sql .= " DESC";
-                    break;
-                case "price":
-                    $sql .= " ORDER BY precio";
-                    break;
-                case "name":
-                    $sql .= " ORDER BY nombre";
-                    break;
-                case "id":
-                    $sql .= " ORDER BY id_guitarra";
-                    break;
-            }
-        }
-        
         return $sql;
     }
+
 
     public function getGuitarrasByCategoria($id_categoria, $filtrar, $orderBy)
     {

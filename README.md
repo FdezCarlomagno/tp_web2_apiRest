@@ -57,6 +57,28 @@ Este proyecto proporciona una API RESTful para gestionar guitarras y categorías
    - **Acción**: `getCategorias`
    - **RESTful**: Representa la colección completa de categorías.
 
+
+## Query params
+
+1. **filtrar `/guitarras?filtrar=`**
+   - **Categorias**: Se puede filtrar por cualquier categoria de guitarra
+   - **en-oferta**: Se filtra por las guitarras que estan en oferta
+
+2. **ordenar `/guitarras?orderBy=`**
+   - **precio**: Se puede ordenar por precio. Ademas se puede concatenar con otro query param ASC o DESC
+   - **nombre**: Se puede ordenar por nombre. Ademas se puede concatenar con otro query param ASC o DESC
+   - **asc**: Se puede ordenar por cualquiera de esos campos ascendentemente.
+   - **desc**: Se puede ordenar por cualquiera de esos campos descendentemente.
+
+### Paginación
+
+3. **page `/guitarras?page=`**: Establece el numero de pagina.
+4. **limit `/guitarras?limit=`**: Establece el numero de registros a mostrar.
+
+Ejemplo:
+   - Si quiero mostrar los primeros 3 registros de la segunda pagina la URL seria asi:
+     localhost/tp_web_api/api/guitarras?page=2&limit=3
+
 ### Autenticación
 
 1. **GET `/user/token`**

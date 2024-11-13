@@ -17,14 +17,33 @@ class Controller {
     public function getGuitarras($req, $res){
         $filtrar= $this->getFiltro($req);
         $orderBy = $this->getOrder($req);
+        $page = $this->getPage($req);
+        $limit = $this->getLimit($req);
     
-        $guitarras = $this->model->getGuitarras($filtrar, $orderBy);
+        $guitarras = $this->model->getGuitarras($filtrar, $orderBy, $page, $limit);
 
         if(count($guitarras) == 0){
             return $this->view->response("No hay guitarras", 200);
         }
 
         return $this->view->response($guitarras, 200);
+    }
+
+    public function getPage($req){
+        $page = 1;
+        if(isset($req->query->page)){
+            $page = $req->query->page;
+        }
+        return $page;
+    }
+
+    public function getLimit($req){
+        $limit = 10;
+        if(isset($req->query->limit)){
+            $limit = $req->query->limit;
+        }
+
+        return $limit;
     }
 
     public function getFiltro($req){
@@ -78,7 +97,7 @@ class Controller {
     public function addGuitarra($req, $res){
 
         if(!$res->user){
-            return $this->view->response($res->user, 401);
+            return $this->view->response("El usuario no esta autorizado", 401);
         }
         
         $nombre = $req->body->nombre;
@@ -104,7 +123,7 @@ class Controller {
     public function deleteGuitarra($req, $res){
 
         if(!$res->user){
-            return $this->view->response("no autorizado", 401);
+            return $this->view->response("El usuario no esta autorizado", 401);
         }
 
         $id = $req->params->id;
@@ -136,7 +155,7 @@ class Controller {
 
     public function updateGuitarra($req, $res){
         if(!$res->user){
-            return $this->view->response("no autorizado", 401);
+            return $this->view->response("El usuario no esta autorizado", 401);
         }
 
         $id = $req->params->id;
